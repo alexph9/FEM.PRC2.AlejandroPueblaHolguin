@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">FirebaseUI Login</string>
+
+    <string name="signed_in">Signed in!</string>
+    <string name="signed_out">Signed out!</string>
+    <string name="signed_cancelled">Signed in cancelled</string>
+    <string name="logout_button">Logout</string>
+</resources>
