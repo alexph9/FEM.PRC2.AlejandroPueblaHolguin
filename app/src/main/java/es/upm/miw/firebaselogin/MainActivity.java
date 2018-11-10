@@ -20,6 +20,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Arrays;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends Activity {
 
@@ -28,12 +35,16 @@ public class MainActivity extends Activity {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private FirebaseDatabase db;
-    private DatabaseReference dbRef;
+    private DatabaseReference dbRefDelivery;
+    private DatabaseReference dbRefCountry;
     private Button logoutButton;
     private Button saveDeliveryButton;
     private EditText gameNameET;
     private EditText deliveryDateET;
     private Spinner countrySpinner;
+
+    private static final String API_BASE_URL = "https://restcountries.eu";
+    private CountryRESTAPIService apiService;
 
     private static final int RC_SIGN_IN = 2018;
 
@@ -47,11 +58,20 @@ public class MainActivity extends Activity {
         deliveryDateET = findViewById(R.id.editTextDate);
         countrySpinner = findViewById(R.id.spinnerCountry);
 
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(API_BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        apiService = retrofit.create(CountryRESTAPIService.class);
+
         db = FirebaseDatabase.getInstance();
-        dbRef = db.getReference("delivery");
+        dbRefDelivery = db.getReference("delivery");
+        dbRefCountry = db.getReference("country");
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -88,20 +108,54 @@ public class MainActivity extends Activity {
         saveDeliveryButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String user = mFirebaseAuth.getCurrentUser().getDisplayName();
-                String gameName = gameNameET.getText().toString();
-                String date = deliveryDateET.getText().toString();
-                String country = countrySpinner.getSelectedItem().toString();
-                Delivery delivery = new Delivery(user, gameName, date, country);
 
-                if(delivery.getCountry().isEmpty() || delivery.getGame().isEmpty() || delivery.getSendDate().isEmpty()) {
-                    Toast.makeText(MainActivity.this, getString(R.string.deliveryEmptyToast), Toast.LENGTH_SHORT).show();
-                } else {
-                    dbRef.push().setValue(delivery);
-                    Toast.makeText(MainActivity.this, getString(R.string.deliverySuccessToast), Toast.LENGTH_SHORT).show();
-                    gameNameET.setText("");
-                    deliveryDateET.setText("");
-                }
+                // Llamada a APIREST
+                String countryName = countrySpinner.getSelectedItem().toString();
+                Call<List<Country>> call_async = apiService.getCountryByName(countryName);
+                call_async.enqueue(new Callback<List<Country>>() {
+
+                    @Override
+                    public void onResponse(Call<List<Country>> call, Response<List<Country>> response) {
+                        List<Country> countryList = response.body();
+                        if (null != countryList) {
+                            String user = mFirebaseAuth.getCurrentUser().getDisplayName();
+                            String gameName = gameNameET.getText().toString();
+                            String date = deliveryDateET.getText().toString();
+                            String countryName = countrySpinner.getSelectedItem().toString();
+                            Country countryInfo = new Country();
+                            for (Country country : countryList) {
+                                countryInfo = country;
+                            }
+                            Delivery delivery = new Delivery(user, gameName, date, countryName);
+
+                            if(delivery.getCountry().isEmpty() || delivery.getGame().isEmpty() || delivery.getSendDate().isEmpty()) {
+                                Toast.makeText(MainActivity.this, getString(R.string.deliveryEmptyToast), Toast.LENGTH_SHORT).show();
+                            } else {
+                                dbRefDelivery.push().setValue(delivery);
+                                dbRefCountry.push().setValue(countryInfo);
+                                Toast.makeText(MainActivity.this, getString(R.string.deliverySuccessToast), Toast.LENGTH_SHORT).show();
+                                gameNameET.setText("");
+                                deliveryDateET.setText("");
+
+                            }
+                        } else {
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    R.string.countryNotExistToast,
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<Country>> call, Throwable t) {
+                        Toast.makeText(
+                                getApplicationContext(),
+                                "ERROR: " + t.getMessage(),
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
+                });
 
             }
         });
@@ -133,4 +187,5 @@ public class MainActivity extends Activity {
             }
         }
     }
+
 }

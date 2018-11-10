@@ -10,14 +10,16 @@
 
     <string name="country1">España</string>
     <string name="country2">Portugal</string>
-    <string name="country3">Inglaterra</string>
-    <string name="country4">Holanda</string>
+    <string name="country3">France</string>
+    <string name="country4">Italia</string>
 
     <string name="textDate">Fecha de entrega</string>
     <string name="delivery_button">Enviar</string>
 
     <string name="deliveryEmptyToast">Debe rellenar todos los campos</string>
     <string name="deliverySuccessToast">Entrega registrada</string>
+
+    <string name="countryNotExistToast">El país seleccionado no se ha encontrado</string>
 
 
 </resources>
