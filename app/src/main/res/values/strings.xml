@@ -5,4 +5,16 @@
     <string name="signed_out">Signed out!</string>
     <string name="signed_cancelled">Signed in cancelled</string>
     <string name="logout_button">Logout</string>
+    <string name="deliveryTitle">Introduzca los datos de la entrega:</string>
+    <string name="productName">Nombre del juego</string>
+
+    <string name="country1">España</string>
+    <string name="country2">Portugal</string>
+    <string name="country3">Inglaterra</string>
+    <string name="country4">Holanda</string>
+
+    <string name="textDate">Fecha de entrega</string>
+    <string name="delivery_button">Enviar</string>
+
+
 </resources>
