@@ -6,8 +6,11 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Button;
 
 // Firebase
 import com.firebase.ui.auth.AuthUI;
@@ -18,13 +21,19 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Arrays;
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends Activity {
 
     final static String LOG_TAG = "MiW";
 
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
-
+    private FirebaseDatabase db;
+    private DatabaseReference dbRef;
+    private Button logoutButton;
+    private Button saveDeliveryButton;
+    private EditText gameNameET;
+    private EditText deliveryDateET;
+    private Spinner countrySpinner;
 
     private static final int RC_SIGN_IN = 2018;
 
@@ -32,7 +41,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViewById(R.id.logoutButton).setOnClickListener(this);
+        logoutButton = findViewById(R.id.logoutButton);
+        saveDeliveryButton = findViewById(R.id.deliveryButton);
+        gameNameET = findViewById(R.id.editTextName);
+        deliveryDateET = findViewById(R.id.editTextDate);
+        countrySpinner = findViewById(R.id.spinnerCountry);
+
+        db = FirebaseDatabase.getInstance();
+        dbRef = db.getReference("delivery");
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
@@ -61,8 +77,35 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }
             }
         };
-    }
 
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mFirebaseAuth.signOut();
+            }
+        });
+
+        saveDeliveryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String user = mFirebaseAuth.getCurrentUser().getDisplayName();
+                String gameName = gameNameET.getText().toString();
+                String date = deliveryDateET.getText().toString();
+                String country = countrySpinner.getSelectedItem().toString();
+                Delivery delivery = new Delivery(user, gameName, date, country);
+
+                if(delivery.getCountry().isEmpty() || delivery.getGame().isEmpty() || delivery.getSendDate().isEmpty()) {
+                    Toast.makeText(MainActivity.this, getString(R.string.deliveryEmptyToast), Toast.LENGTH_SHORT).show();
+                } else {
+                    dbRef.push().setValue(delivery);
+                    Toast.makeText(MainActivity.this, getString(R.string.deliverySuccessToast), Toast.LENGTH_SHORT).show();
+                    gameNameET.setText("");
+                    deliveryDateET.setText("");
+                }
+
+            }
+        });
+    }
 
     @Override
     protected void onPause() {
@@ -89,16 +132,5 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 finish();
             }
         }
-    }
-
-    /**
-     * Called when a view has been clicked.
-     *
-     * @param v The view that was clicked.
-     */
-    @Override
-    public void onClick(View v) {
-        mFirebaseAuth.signOut();
-        Log.i(LOG_TAG, getString(R.string.signed_out));
     }
 }

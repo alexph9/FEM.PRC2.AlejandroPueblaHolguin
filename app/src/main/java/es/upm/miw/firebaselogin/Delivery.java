@@ -14,6 +14,7 @@ public class Delivery {
         this.country = country;
     }
 
+
     public String getSendDate() {
         return sendDate;
     }
