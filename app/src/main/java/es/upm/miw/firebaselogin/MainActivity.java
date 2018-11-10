@@ -1,12 +1,20 @@
 package es.upm.miw.firebaselogin;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,10 +22,18 @@ import android.widget.Button;
 
 // Firebase
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
+
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,16 +53,21 @@ public class MainActivity extends Activity {
     private FirebaseDatabase db;
     private DatabaseReference dbRefDelivery;
     private DatabaseReference dbRefCountry;
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
     private Button logoutButton;
     private Button saveDeliveryButton;
     private EditText gameNameET;
     private EditText deliveryDateET;
     private Spinner countrySpinner;
+    private ImageView flagImageView;
+    private String countryString;
 
     private static final String API_BASE_URL = "https://restcountries.eu";
     private CountryRESTAPIService apiService;
 
     private static final int RC_SIGN_IN = 2018;
+    private Uri coverUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +78,11 @@ public class MainActivity extends Activity {
         gameNameET = findViewById(R.id.editTextName);
         deliveryDateET = findViewById(R.id.editTextDate);
         countrySpinner = findViewById(R.id.spinnerCountry);
+        /*flagImageView = findViewById(R.id.flagCountryIV);
+
+        Picasso.with(getApplicationContext())
+                .load("https://restcountries.eu/data/esp.svg")
+                .into(flagImageView);*/
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
@@ -68,6 +94,10 @@ public class MainActivity extends Activity {
         db = FirebaseDatabase.getInstance();
         dbRefDelivery = db.getReference("delivery");
         dbRefCountry = db.getReference("country");
+
+        // Storage Firebase
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference();
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
@@ -122,9 +152,12 @@ public class MainActivity extends Activity {
                             String gameName = gameNameET.getText().toString();
                             String date = deliveryDateET.getText().toString();
                             String countryName = countrySpinner.getSelectedItem().toString();
+                            countryString = countryName;
                             Country countryInfo = new Country();
+                            //String flagUri = "https://restcountries.eu/data/esp.svg" ;
                             for (Country country : countryList) {
                                 countryInfo = country;
+                                //flagUri = country.getFlag();
                             }
                             Delivery delivery = new Delivery(user, gameName, date, countryName);
 
@@ -133,6 +166,40 @@ public class MainActivity extends Activity {
                             } else {
                                 dbRefDelivery.push().setValue(delivery);
                                 dbRefCountry.push().setValue(countryInfo);
+
+                                /*Picasso.with(getApplicationContext())
+                                        .load(flagUri)
+                                        .into(flagImageView);
+
+                                //Save in storage
+                                StorageReference flagRef = storageRef.child(countryString + ".jpeg");
+
+                                flagImageView.setDrawingCacheEnabled(true);
+                                flagImageView.buildDrawingCache();
+                                Bitmap bitmap = ((BitmapDrawable) flagImageView.getDrawable()).getBitmap();
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                                byte[] data = baos.toByteArray();
+
+                                UploadTask uploadTask = flagRef.putBytes(data);
+                                uploadTask.addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(MainActivity.this,
+                                                getString(R.string.flagImageNotSavedToast),
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        taskSnapshot.getMetadata();
+                                        Toast.makeText(MainActivity.this,
+                                                getString(R.string.flagImageSavedToast),
+                                                Toast.LENGTH_SHORT).show();
+
+                                    }
+                                });*/
+
                                 Toast.makeText(MainActivity.this, getString(R.string.deliverySuccessToast), Toast.LENGTH_SHORT).show();
                                 gameNameET.setText("");
                                 deliveryDateET.setText("");
@@ -187,5 +254,4 @@ public class MainActivity extends Activity {
             }
         }
     }
-
 }

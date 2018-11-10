@@ -20,6 +20,8 @@
     <string name="deliverySuccessToast">Entrega registrada</string>
 
     <string name="countryNotExistToast">El país seleccionado no se ha encontrado</string>
+    <string name="flagImageNotSavedToast">Imagen no guardada en Storage</string>
+    <string name="flagImageSavedToast">Imagen guardada en Storage</string>
 
 
 </resources>

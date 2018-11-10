@@ -29,11 +29,13 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:16.0.4'
     implementation 'com.google.firebase:firebase-auth:16.0.5'
     implementation 'com.google.firebase:firebase-database:16.0.4'
+    implementation 'com.google.firebase:firebase-storage:16.0.4'
     // https://github.com/firebase/FirebaseUI-Android/tree/master/auth
     implementation 'com.firebaseui:firebase-ui-auth:4.1.0'
-
+    implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+
 }
 
 // Google Services
